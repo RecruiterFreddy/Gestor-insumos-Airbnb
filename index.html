@@ -3,844 +3,1260 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión Inventario Airbnb</title>
+  <title>HostStock - Gestión de Insumos Airbnb</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .airbnb-gradient { background: linear-gradient(135deg, #FF385C 0%, #E31C5F 50%, #D70466 100%); }
+    .card-shadow { box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+    .animate-slideUp { animation: slideUp 0.4s ease-out; }
+    .animate-pulse-slow { animation: pulse 2s infinite; }
+    .btn-airbnb { transition: all 0.2s; }
+    .btn-airbnb:hover { transform: scale(1.02); }
+    .btn-airbnb:active { transform: scale(0.98); }
+  </style>
 </head>
-<body class="bg-gray-900">
+<body class="bg-gray-50">
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect } = React;
-    
-    // Iconos simples como componentes
-    const Icon = ({ name, size = 18 }) => {
-      const icons = {
-        home: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-        package: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>,
-        cart: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>,
-        list: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>,
-        settings: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
-        plus: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
-        minus: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>,
-        check: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
-        trash: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
-        alert: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>,
-        calendar: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-      };
-      return icons[name] || null;
+    const { useState, useEffect, useCallback, memo } = React;
+
+    // Iconos
+    const Icons = {
+      home: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      building: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg>,
+      package: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16.5 9.4 7.5 4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>,
+      box: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>,
+      check: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+      plus: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5v14"/></svg>,
+      minus: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>,
+      trash: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
+      alert: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>,
+      chart: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>,
+      settings: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+      sparkles: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>,
+      arrowRight: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>,
+      arrowLeft: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7M19 12H5"/></svg>,
     };
 
+    // Logo
+    const Logo = () => (
+      <div className="flex items-center gap-2">
+        <div className="w-9 h-9 airbnb-gradient rounded-xl flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l6.9 3.45L12 11.09 5.1 7.63 12 4.18zM4 8.82l7 3.5v7.36l-7-3.5V8.82zm9 10.86v-7.36l7-3.5v7.36l-7 3.5z"/></svg>
+        </div>
+        <span className="text-xl font-bold text-gray-900">HostStock</span>
+      </div>
+    );
+
+    // Stepper
+    const Stepper = ({ steps, current }) => (
+      <div className="flex items-center justify-center mb-8">
+        {steps.map((step, i) => (
+          <div key={i} className="flex items-center">
+            <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all ${i < current ? 'airbnb-gradient text-white' : i === current ? 'bg-[#FF385C] text-white animate-pulse-slow' : 'bg-gray-200 text-gray-500'}`}>
+              {i < current ? Icons.check(18) : i + 1}
+            </div>
+            <span className={`ml-2 text-sm font-medium hidden sm:block ${i <= current ? 'text-gray-900' : 'text-gray-400'}`}>{step}</span>
+            {i < steps.length - 1 && <div className={`w-8 sm:w-16 h-1 mx-2 rounded ${i < current ? 'bg-[#FF385C]' : 'bg-gray-200'}`} />}
+          </div>
+        ))}
+      </div>
+    );
+
+    // Setup Wizard - Componente separado
+    function SetupWizard({ onComplete, onAddProperty, onAddItem, onSaveKit, inventory, properties, selectedProperty }) {
+      const [step, setStep] = useState(0);
+      const [propertyName, setPropertyName] = useState('');
+      const [itemName, setItemName] = useState('');
+      const [itemQty, setItemQty] = useState('');
+      const [itemCost, setItemCost] = useState('');
+      const [itemMin, setItemMin] = useState('5');
+      const [kitItems, setKitItems] = useState({});
+
+      const steps = ['Propiedad', 'Inventario', 'Kit', '¡Listo!'];
+      const currentInv = inventory[selectedProperty] || [];
+      const prop = properties.find(p => p.id === selectedProperty);
+
+      const handleAddProperty = () => {
+        if (propertyName.trim()) {
+          onAddProperty(propertyName.trim());
+          setPropertyName('');
+          setStep(1);
+        }
+      };
+
+      const handleAddItem = () => {
+        if (itemName && parseInt(itemQty) > 0) {
+          onAddItem({
+            name: itemName,
+            quantity: parseInt(itemQty) || 0,
+            unitCost: parseInt(itemCost) || 0,
+            minStock: parseInt(itemMin) || 5
+          });
+          setItemName('');
+          setItemQty('');
+          setItemCost('');
+          setItemMin('5');
+        }
+      };
+
+      const updateKitQty = (itemId, delta) => {
+        setKitItems(prev => {
+          const current = prev[itemId] || 0;
+          const newVal = Math.max(0, current + delta);
+          if (newVal === 0) {
+            const { [itemId]: _, ...rest } = prev;
+            return rest;
+          }
+          return { ...prev, [itemId]: newVal };
+        });
+      };
+
+      const handleSaveKit = () => {
+        const items = Object.entries(kitItems).map(([itemId, qty]) => ({ itemId, qty }));
+        if (items.length > 0) {
+          // Guardar como array de kits (nuevo formato)
+          const newKit = { id: Date.now().toString(), name: 'Kit Estándar', items };
+          onSaveKit([newKit]);
+          setStep(3);
+        }
+      };
+
+      const kitCost = Object.entries(kitItems).reduce((sum, [itemId, qty]) => {
+        const item = currentInv.find(i => i.id === itemId);
+        return sum + (item ? item.unitCost * qty : 0);
+      }, 0);
+
+      return (
+        <div className="min-h-screen bg-white p-4 sm:p-8">
+          <div className="max-w-lg mx-auto">
+            <div className="text-center mb-8">
+              <Logo />
+              <h1 className="text-2xl font-bold text-gray-900 mt-6">Configura tu primera propiedad</h1>
+              <p className="text-gray-500 mt-2">Solo 3 pasos para comenzar</p>
+            </div>
+
+            <Stepper steps={steps} current={step} />
+
+            {step === 0 && (
+              <div className="bg-white rounded-2xl card-shadow p-6 animate-slideUp">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 airbnb-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 text-white">{Icons.building(32)}</div>
+                  <h2 className="text-xl font-semibold">¿Cómo se llama tu propiedad?</h2>
+                  <p className="text-gray-500 text-sm mt-1">Ej: "Depto Centro", "Casa Playa"</p>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Nombre de la propiedad"
+                  value={propertyName}
+                  onChange={(e) => setPropertyName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddProperty()}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:border-[#FF385C] focus:outline-none transition"
+                  autoFocus
+                />
+                <button
+                  onClick={handleAddProperty}
+                  disabled={!propertyName.trim()}
+                  className="w-full mt-4 airbnb-gradient text-white py-4 rounded-xl font-semibold text-lg btn-airbnb disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  Continuar {Icons.arrowRight(20)}
+                </button>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="bg-white rounded-2xl card-shadow p-6 animate-slideUp">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-[#00A699] rounded-2xl flex items-center justify-center mx-auto mb-4 text-white">{Icons.package(32)}</div>
+                  <h2 className="text-xl font-semibold">Agrega tus productos</h2>
+                  <p className="text-gray-500 text-sm mt-1">Los insumos que usas en {prop?.name}</p>
+                </div>
+                
+                <div className="space-y-3 mb-4">
+                  <input 
+                    type="text" 
+                    placeholder="Nombre (ej: Esponjas)" 
+                    value={itemName} 
+                    onChange={(e) => setItemName(e.target.value)} 
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-[#FF385C] focus:outline-none" 
+                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Cantidad</label>
+                      <input 
+                        type="number" 
+                        value={itemQty} 
+                        onChange={(e) => setItemQty(e.target.value)} 
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-[#FF385C] focus:outline-none" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Costo $</label>
+                      <input 
+                        type="number" 
+                        value={itemCost} 
+                        onChange={(e) => setItemCost(e.target.value)} 
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-[#FF385C] focus:outline-none" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Mínimo</label>
+                      <input 
+                        type="number" 
+                        value={itemMin} 
+                        onChange={(e) => setItemMin(e.target.value)} 
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-[#FF385C] focus:outline-none" 
+                      />
+                    </div>
+                  </div>
+                  <button onClick={handleAddItem} className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium btn-airbnb flex items-center justify-center gap-2">
+                    {Icons.plus(18)} Agregar producto
+                  </button>
+                </div>
+
+                {currentInv.length > 0 && (
+                  <div className="border-t pt-4 mt-4">
+                    <p className="text-sm text-gray-500 mb-2">Productos agregados:</p>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {currentInv.map(item => (
+                        <div key={item.id} className="flex justify-between items-center bg-gray-50 rounded-lg p-3">
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-gray-500">{item.quantity} uds • ${item.unitCost}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setStep(0)} className="flex-1 border-2 border-gray-200 py-3 rounded-xl font-medium btn-airbnb flex items-center justify-center">{Icons.arrowLeft(18)}</button>
+                  <button onClick={() => setStep(2)} disabled={currentInv.length === 0} className="flex-1 airbnb-gradient text-white py-3 rounded-xl font-semibold btn-airbnb disabled:opacity-50 flex items-center justify-center gap-2">
+                    Continuar {Icons.arrowRight(18)}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="bg-white rounded-2xl card-shadow p-6 animate-slideUp">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-[#FC642D] rounded-2xl flex items-center justify-center mx-auto mb-4 text-white">{Icons.box(32)}</div>
+                  <h2 className="text-xl font-semibold">Crea tu Kit de Bienvenida</h2>
+                  <p className="text-gray-500 text-sm mt-1">¿Cuánto de cada producto usas por reserva?</p>
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  {currentInv.map(item => (
+                    <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
+                      <div>
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-xs text-gray-400">Disponible: {item.quantity}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => updateKitQty(item.id, -1)} className="w-9 h-9 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center hover:border-[#FF385C] transition">{Icons.minus(16)}</button>
+                        <span className="w-8 text-center font-bold text-lg">{kitItems[item.id] || 0}</span>
+                        <button onClick={() => updateKitQty(item.id, 1)} className="w-9 h-9 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center hover:border-[#FF385C] transition">{Icons.plus(16)}</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {Object.keys(kitItems).length > 0 && (
+                  <div className="bg-[#FFF8F6] border-2 border-[#FF385C]/20 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-gray-600">Costo por reserva:</p>
+                    <p className="text-2xl font-bold text-[#FF385C]">${kitCost.toLocaleString()}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button onClick={() => setStep(1)} className="flex-1 border-2 border-gray-200 py-3 rounded-xl font-medium btn-airbnb flex items-center justify-center">{Icons.arrowLeft(18)}</button>
+                  <button onClick={handleSaveKit} disabled={Object.keys(kitItems).length === 0} className="flex-1 airbnb-gradient text-white py-3 rounded-xl font-semibold btn-airbnb disabled:opacity-50 flex items-center justify-center gap-2">
+                    Guardar Kit {Icons.arrowRight(18)}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="bg-white rounded-2xl card-shadow p-8 text-center animate-slideUp">
+                <div className="w-20 h-20 airbnb-gradient rounded-full flex items-center justify-center mx-auto mb-6 text-white">{Icons.sparkles(40)}</div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Todo listo!</h2>
+                <p className="text-gray-500 mb-6">Tu propiedad está configurada y lista para usar</p>
+                
+                <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+                  <p className="font-semibold text-gray-900">{prop?.name}</p>
+                  <p className="text-sm text-gray-500">{currentInv.length} productos • Kit configurado</p>
+                </div>
+
+                <button onClick={onComplete} className="w-full airbnb-gradient text-white py-4 rounded-xl font-semibold text-lg btn-airbnb">
+                  Ir al Dashboard
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Main App
     function App() {
-      const [activeTab, setActiveTab] = useState('dashboard');
-      const [loading, setLoading] = useState(true);
+      const [view, setView] = useState('dashboard');
       const [properties, setProperties] = useState([]);
       const [inventories, setInventories] = useState({});
       const [kits, setKits] = useState({});
       const [reservations, setReservations] = useState([]);
       const [selectedProperty, setSelectedProperty] = useState('');
-      const [newItem, setNewItem] = useState({ name: '', quantity: 0, unitCost: 0, minStock: 5 });
-      const [newProperty, setNewProperty] = useState('');
-      const [newKit, setNewKit] = useState({ name: '', items: [] });
       const [notification, setNotification] = useState(null);
-      const [showCompleteModal, setShowCompleteModal] = useState(false);
-      const [reservationDate, setReservationDate] = useState(new Date().toISOString().split('T')[0]);
-      const [selectedReservationProperty, setSelectedReservationProperty] = useState('');
+      const [showModal, setShowModal] = useState(false);
       const [showCelebration, setShowCelebration] = useState(false);
-      const [confettiPieces, setConfettiPieces] = useState([]);
+      const [confetti, setConfetti] = useState([]);
+      const [setupDone, setSetupDone] = useState(false);
+      
+      // Form states for main app
+      const [newItemName, setNewItemName] = useState('');
+      const [newItemQty, setNewItemQty] = useState('');
+      const [newItemCost, setNewItemCost] = useState('');
+      const [newItemMin, setNewItemMin] = useState('5');
+      const [kitEdits, setKitEdits] = useState({});
+      const [currentKitName, setCurrentKitName] = useState('');
+      const [editingKitId, setEditingKitId] = useState(null);
+      const [resDate, setResDate] = useState(new Date().toISOString().split('T')[0]);
+      const [resProp, setResProp] = useState('');
+      const [resKit, setResKit] = useState('');
+      const [reportMonth, setReportMonth] = useState(new Date().toISOString().slice(0, 7));
+      const [kitToDelete, setKitToDelete] = useState(null);
 
+      // Load data
       useEffect(() => {
-        loadData();
+        try {
+          const p = JSON.parse(localStorage.getItem('hs_properties') || '[]');
+          const i = JSON.parse(localStorage.getItem('hs_inventories') || '{}');
+          let k = JSON.parse(localStorage.getItem('hs_kits') || '{}');
+          const r = JSON.parse(localStorage.getItem('hs_reservations') || '[]');
+          
+          // Migrar kits del formato viejo (objeto) al nuevo (array)
+          let needsMigration = false;
+          Object.keys(k).forEach(propId => {
+            if (k[propId] && !Array.isArray(k[propId])) {
+              // Formato viejo: { name, items }
+              if (k[propId].items && k[propId].items.length > 0) {
+                k[propId] = [{ id: Date.now().toString() + propId, name: k[propId].name || 'Kit Estándar', items: k[propId].items }];
+              } else {
+                k[propId] = [];
+              }
+              needsMigration = true;
+            }
+          });
+          if (needsMigration) {
+            localStorage.setItem('hs_kits', JSON.stringify(k));
+          }
+          
+          setProperties(p);
+          setInventories(i);
+          setKits(k);
+          setReservations(r);
+          
+          const hasData = p.length > 0 && Object.values(i).some(inv => inv.length > 0) && Object.values(k).some(kit => Array.isArray(kit) && kit.length > 0);
+          setSetupDone(hasData);
+          if (p.length > 0) setSelectedProperty(p[0].id);
+        } catch (e) {
+          console.error('Error loading data:', e);
+        }
       }, []);
 
+      // Load kit for editing
       useEffect(() => {
-        if (properties.length > 0 && !selectedProperty) {
-          setSelectedProperty(properties[0].id);
+        if (editingKitId && selectedProperty) {
+          const propKits = kits[selectedProperty] || [];
+          const kit = propKits.find(k => k.id === editingKitId);
+          if (kit) {
+            const kitObj = {};
+            kit.items.forEach(i => { kitObj[i.itemId] = i.qty; });
+            setKitEdits(kitObj);
+            setCurrentKitName(kit.name);
+          }
         }
-      }, [properties]);
+      }, [editingKitId, selectedProperty]);
 
-      const loadData = () => {
-        try {
-          const props = localStorage.getItem('airbnb_properties_v2');
-          const inv = localStorage.getItem('airbnb_inventories_v2');
-          const kitsData = localStorage.getItem('airbnb_kits_v2');
-          const res = localStorage.getItem('airbnb_reservations_v2');
-          
-          if (props) setProperties(JSON.parse(props));
-          if (inv) setInventories(JSON.parse(inv));
-          if (kitsData) setKits(JSON.parse(kitsData));
-          if (res) setReservations(JSON.parse(res));
-        } catch (e) {
-          console.log('Error loading:', e);
-        }
-        setLoading(false);
-      };
-
-      const saveData = (key, data) => {
-        localStorage.setItem(key, JSON.stringify(data));
-      };
-
-      const showNotification = (msg, type = 'success') => {
+      const save = (k, d) => localStorage.setItem(k, JSON.stringify(d));
+      
+      const notify = (msg, type = 'success') => {
         setNotification({ msg, type });
         setTimeout(() => setNotification(null), 3000);
       };
 
-      const playSuccessSound = () => {
+      const playSound = () => {
         try {
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const notes = [523.25, 659.25, 783.99, 1046.50];
-          notes.forEach((freq, i) => {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            oscillator.frequency.value = freq;
-            oscillator.type = 'sine';
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + i * 0.15);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.3);
-            oscillator.start(audioContext.currentTime + i * 0.15);
-            oscillator.stop(audioContext.currentTime + i * 0.15 + 0.3);
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.frequency.value = f; o.type = 'sine';
+            g.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.12);
+            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.12 + 0.25);
+            o.start(ctx.currentTime + i * 0.12);
+            o.stop(ctx.currentTime + i * 0.12 + 0.25);
           });
         } catch(e) {}
       };
 
-      const triggerCelebration = () => {
-        const pieces = [];
-        const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-        for (let i = 0; i < 80; i++) {
-          pieces.push({
-            id: i,
-            x: Math.random() * 100,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            delay: Math.random() * 0.5,
-            rotation: Math.random() * 360,
-            size: Math.random() * 10 + 5
-          });
-        }
-        setConfettiPieces(pieces);
+      const celebrate = () => {
+        const colors = ['#FF385C', '#FFD700', '#00A699', '#FC642D', '#484848'];
+        const pieces = Array.from({ length: 100 }, (_, i) => ({
+          id: i, x: Math.random() * 100, color: colors[Math.floor(Math.random() * colors.length)],
+          delay: Math.random() * 0.8, size: Math.random() * 12 + 6
+        }));
+        setConfetti(pieces);
         setShowCelebration(true);
-        playSuccessSound();
-        setTimeout(() => {
-          setShowCelebration(false);
-          setConfettiPieces([]);
-        }, 3000);
+        playSound();
+        setTimeout(() => { setShowCelebration(false); setConfetti([]); }, 3500);
       };
 
-      const addProperty = () => {
-        if (!newProperty.trim()) return;
-        const newProp = { id: Date.now().toString(), name: newProperty };
-        const updatedProps = [...properties, newProp];
-        const updatedInv = { ...inventories, [newProp.id]: [] };
-        const updatedKits = { ...kits, [newProp.id]: null };
-        
-        setProperties(updatedProps);
-        setInventories(updatedInv);
-        setKits(updatedKits);
-        setSelectedProperty(newProp.id);
-        
-        saveData('airbnb_properties_v2', updatedProps);
-        saveData('airbnb_inventories_v2', updatedInv);
-        saveData('airbnb_kits_v2', updatedKits);
-        setNewProperty('');
-        showNotification('Propiedad agregada');
+      // Property functions
+      const addProperty = (name) => {
+        const prop = { id: Date.now().toString(), name };
+        const up = [...properties, prop];
+        const ui = { ...inventories, [prop.id]: [] };
+        const uk = { ...kits, [prop.id]: null };
+        setProperties(up); setInventories(ui); setKits(uk); setSelectedProperty(prop.id);
+        save('hs_properties', up); save('hs_inventories', ui); save('hs_kits', uk);
+        notify('¡Propiedad agregada!');
       };
 
       const deleteProperty = (id) => {
-        const updated = properties.filter(p => p.id !== id);
-        const { [id]: removedInv, ...restInv } = inventories;
-        const { [id]: removedKit, ...restKits } = kits;
-        
-        setProperties(updated);
-        setInventories(restInv);
-        setKits(restKits);
-        
-        if (selectedProperty === id && updated.length > 0) {
-          setSelectedProperty(updated[0].id);
-        }
-        
-        saveData('airbnb_properties_v2', updated);
-        saveData('airbnb_inventories_v2', restInv);
-        saveData('airbnb_kits_v2', restKits);
+        const up = properties.filter(p => p.id !== id);
+        const { [id]: _, ...ri } = inventories;
+        const { [id]: __, ...rk } = kits;
+        setProperties(up); setInventories(ri); setKits(rk);
+        if (selectedProperty === id && up.length > 0) setSelectedProperty(up[0].id);
+        save('hs_properties', up); save('hs_inventories', ri); save('hs_kits', rk);
       };
 
-      const currentInventory = inventories[selectedProperty] || [];
-      const currentKit = kits[selectedProperty];
+      // Inventory
+      const currentInv = inventories[selectedProperty] || [];
 
-      const addInventoryItem = () => {
-        if (!newItem.name || newItem.quantity <= 0 || !selectedProperty) return;
-        const updatedInv = {
-          ...inventories,
-          [selectedProperty]: [...currentInventory, { ...newItem, id: Date.now().toString() }]
-        };
-        setInventories(updatedInv);
-        saveData('airbnb_inventories_v2', updatedInv);
-        setNewItem({ name: '', quantity: 0, unitCost: 0, minStock: 5 });
-        showNotification('Producto agregado');
+      const addItem = (item) => {
+        const newInv = [...currentInv, { ...item, id: Date.now().toString() }];
+        const ui = { ...inventories, [selectedProperty]: newInv };
+        setInventories(ui);
+        save('hs_inventories', ui);
+        notify('Producto agregado');
       };
 
-      const updateInventoryQty = (id, delta) => {
-        const updatedInv = {
-          ...inventories,
-          [selectedProperty]: currentInventory.map(item =>
-            item.id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
-          )
-        };
-        setInventories(updatedInv);
-        saveData('airbnb_inventories_v2', updatedInv);
-      };
-
-      const deleteInventoryItem = (id) => {
-        const updatedInv = {
-          ...inventories,
-          [selectedProperty]: currentInventory.filter(i => i.id !== id)
-        };
-        setInventories(updatedInv);
-        saveData('airbnb_inventories_v2', updatedInv);
-      };
-
-      const saveKit = () => {
-        if (newKit.items.length === 0) {
-          showNotification('Agrega al menos 1 item al kit', 'error');
-          return;
-        }
-        const updatedKits = {
-          ...kits,
-          [selectedProperty]: { name: newKit.name || 'Kit Estándar', items: newKit.items }
-        };
-        setKits(updatedKits);
-        saveData('airbnb_kits_v2', updatedKits);
-        showNotification('Kit guardado');
-      };
-
-      const updateKitItem = (itemId, qty) => {
-        const existing = newKit.items.find(i => i.itemId === itemId);
-        if (existing) {
-          if (qty <= 0) {
-            setNewKit({ ...newKit, items: newKit.items.filter(i => i.itemId !== itemId) });
-          } else {
-            setNewKit({ ...newKit, items: newKit.items.map(i => i.itemId === itemId ? { ...i, qty } : i) });
-          }
-        } else if (qty > 0) {
-          setNewKit({ ...newKit, items: [...newKit.items, { itemId, qty }] });
+      const addItemFromForm = () => {
+        if (newItemName && parseInt(newItemQty) > 0) {
+          addItem({
+            name: newItemName,
+            quantity: parseInt(newItemQty) || 0,
+            unitCost: parseInt(newItemCost) || 0,
+            minStock: parseInt(newItemMin) || 5,
+            purchaseDate: new Date().toISOString(),
+            initialQty: parseInt(newItemQty) || 0
+          });
+          setNewItemName(''); setNewItemQty(''); setNewItemCost(''); setNewItemMin('5');
         }
       };
 
-      const loadKitForEditing = (propId) => {
-        const kit = kits[propId];
-        if (kit) {
-          setNewKit({ name: kit.name, items: [...kit.items] });
-        } else {
-          setNewKit({ name: '', items: [] });
-        }
-      };
-
-      useEffect(() => {
-        if (selectedProperty && activeTab === 'kits') {
-          loadKitForEditing(selectedProperty);
-        }
-      }, [selectedProperty, activeTab]);
-
-      const completeReservation = (propertyId) => {
-        const kit = kits[propertyId];
-        const inv = inventories[propertyId] || [];
-        const prop = properties.find(p => p.id === propertyId);
-        
-        if (!kit || kit.items.length === 0) {
-          showNotification('Esta propiedad no tiene kit configurado', 'error');
-          return;
-        }
-
-        let canComplete = true;
-        let missingItems = [];
-        
-        for (const kitItem of kit.items) {
-          const invItem = inv.find(i => i.id === kitItem.itemId);
-          if (!invItem || invItem.quantity < kitItem.qty) {
-            canComplete = false;
-            missingItems.push(invItem?.name || 'Item desconocido');
-          }
-        }
-
-        if (!canComplete) {
-          showNotification(`Stock insuficiente: ${missingItems.join(', ')}`, 'error');
-          return;
-        }
-
-        const updatedPropertyInv = inv.map(item => {
-          const kitItem = kit.items.find(ki => ki.itemId === item.id);
-          if (kitItem) {
-            return { ...item, quantity: item.quantity - kitItem.qty };
+      const restockItem = (itemId, qty) => {
+        const updatedInv = currentInv.map(item => {
+          if (item.id === itemId) {
+            return { 
+              ...item, 
+              quantity: item.quantity + qty,
+              purchaseDate: new Date().toISOString(),
+              initialQty: item.quantity + qty
+            };
           }
           return item;
         });
+        const ui = { ...inventories, [selectedProperty]: updatedInv };
+        setInventories(ui);
+        save('hs_inventories', ui);
+        notify(`+${qty} unidades agregadas`);
+      };
 
-        const updatedInv = { ...inventories, [propertyId]: updatedPropertyInv };
+      const updateQty = (id, delta) => {
+        const ui = { ...inventories, [selectedProperty]: currentInv.map(i => i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i) };
+        setInventories(ui); save('hs_inventories', ui);
+      };
 
-        const totalCost = kit.items.reduce((sum, ki) => {
+      const deleteItem = (id) => {
+        const ui = { ...inventories, [selectedProperty]: currentInv.filter(i => i.id !== id) };
+        setInventories(ui); save('hs_inventories', ui);
+      };
+
+      // Kit - ahora soporta múltiples kits por propiedad
+      const updateKitQty = (itemId, delta) => {
+        setKitEdits(prev => {
+          const current = prev[itemId] || 0;
+          const newVal = Math.max(0, current + delta);
+          if (newVal === 0) {
+            const { [itemId]: _, ...rest } = prev;
+            return rest;
+          }
+          return { ...prev, [itemId]: newVal };
+        });
+      };
+
+      const saveKit = (kitArray) => {
+        // Si viene del wizard, kitArray ya es un array de kits
+        if (Array.isArray(kitArray) && kitArray[0]?.id) {
+          const uk = { ...kits, [selectedProperty]: kitArray };
+          setKits(uk); 
+          save('hs_kits', uk);
+          notify('¡Kit creado!');
+          return;
+        }
+        
+        // Si viene del formulario normal
+        const kitItems = kitArray || Object.entries(kitEdits).map(([itemId, qty]) => ({ itemId, qty }));
+        if (kitItems.length === 0) { notify('Agrega al menos 1 item', 'error'); return; }
+        if (!currentKitName.trim()) { notify('Ingresa un nombre para el kit', 'error'); return; }
+        
+        const propKits = kits[selectedProperty] || [];
+        let updatedKits;
+        
+        if (editingKitId) {
+          // Editando kit existente
+          updatedKits = propKits.map(k => k.id === editingKitId ? { ...k, name: currentKitName.trim(), items: kitItems } : k);
+        } else {
+          // Nuevo kit
+          const newKit = { id: Date.now().toString(), name: currentKitName.trim(), items: kitItems };
+          updatedKits = [...propKits, newKit];
+        }
+        
+        const uk = { ...kits, [selectedProperty]: updatedKits };
+        setKits(uk); 
+        save('hs_kits', uk);
+        notify(editingKitId ? '¡Kit actualizado!' : '¡Kit creado!');
+        
+        // Reset form
+        setKitEdits({});
+        setCurrentKitName('');
+        setEditingKitId(null);
+      };
+
+      const deleteKit = (kitId) => {
+        const propKits = kits[selectedProperty] || [];
+        const updatedKits = propKits.filter(k => k.id !== kitId);
+        const uk = { ...kits, [selectedProperty]: updatedKits };
+        setKits(uk);
+        save('hs_kits', uk);
+        notify('Kit eliminado');
+        setKitToDelete(null);
+        
+        if (editingKitId === kitId) {
+          cancelEditKit();
+        }
+      };
+
+      const startEditKit = (kit) => {
+        setEditingKitId(kit.id);
+        setCurrentKitName(kit.name);
+        const kitObj = {};
+        kit.items.forEach(i => { kitObj[i.itemId] = i.qty; });
+        setKitEdits(kitObj);
+      };
+
+      const cancelEditKit = () => {
+        setEditingKitId(null);
+        setCurrentKitName('');
+        setKitEdits({});
+      };
+
+      // Reservation
+      const completeReservation = () => {
+        if (!resProp || !resKit) return;
+        const propKits = kits[resProp] || [];
+        const kit = propKits.find(k => k.id === resKit);
+        const inv = inventories[resProp] || [];
+        const prop = properties.find(p => p.id === resProp);
+        
+        if (!kit?.items?.length) { notify('Kit no encontrado', 'error'); return; }
+        
+        for (const ki of kit.items) {
           const item = inv.find(i => i.id === ki.itemId);
-          return sum + (item ? item.unitCost * ki.qty : 0);
-        }, 0);
+          if (!item || item.quantity < ki.qty) { notify(`Stock insuficiente: ${item?.name || 'Item'}`, 'error'); return; }
+        }
 
-        const newRes = {
-          id: Date.now().toString(),
-          date: reservationDate,
-          createdAt: new Date().toISOString(),
-          propertyId,
-          propertyName: prop?.name || 'Desconocida',
-          kitName: kit.name,
-          items: kit.items.map(ki => {
-            const item = inv.find(i => i.id === ki.itemId);
-            return { name: item?.name, qty: ki.qty, unitCost: item?.unitCost || 0 };
-          }),
-          totalCost
+        const updInv = inv.map(item => {
+          const ki = kit.items.find(k => k.itemId === item.id);
+          return ki ? { ...item, quantity: item.quantity - ki.qty } : item;
+        });
+
+        const cost = kit.items.reduce((s, ki) => { const it = inv.find(i => i.id === ki.itemId); return s + (it ? it.unitCost * ki.qty : 0); }, 0);
+        const res = {
+          id: Date.now().toString(), date: resDate, propertyId: resProp, propertyName: prop?.name, kitId: kit.id, kitName: kit.name,
+          items: kit.items.map(ki => { const it = inv.find(i => i.id === ki.itemId); return { name: it?.name, qty: ki.qty, cost: it?.unitCost || 0 }; }),
+          totalCost: cost
         };
 
-        const updatedRes = [newRes, ...reservations];
+        const ui = { ...inventories, [resProp]: updInv };
+        const ur = [res, ...reservations];
+        setInventories(ui); setReservations(ur);
+        save('hs_inventories', ui); save('hs_reservations', ur);
+        setShowModal(false); setResProp(''); setResKit('');
+        celebrate();
+        notify(`¡Reserva completada! Costo: ${cost.toLocaleString()}`);
+      };
+
+      const deleteReservation = (resId) => {
+        const res = reservations.find(r => r.id === resId);
+        if (!res) return;
         
-        setInventories(updatedInv);
-        setReservations(updatedRes);
-        saveData('airbnb_inventories_v2', updatedInv);
-        saveData('airbnb_reservations_v2', updatedRes);
+        // Devolver items al inventario
+        const inv = inventories[res.propertyId] || [];
+        const updatedInv = inv.map(item => {
+          const resItem = res.items.find(i => i.name === item.name);
+          if (resItem) {
+            return { ...item, quantity: item.quantity + resItem.qty };
+          }
+          return item;
+        });
         
-        setShowCompleteModal(false);
-        setSelectedReservationProperty('');
-        triggerCelebration();
-        showNotification(`✓ Reserva completada en ${prop?.name} - Costo: $${totalCost.toLocaleString()}`);
+        const ui = { ...inventories, [res.propertyId]: updatedInv };
+        const ur = reservations.filter(r => r.id !== resId);
+        
+        setInventories(ui);
+        setReservations(ur);
+        save('hs_inventories', ui);
+        save('hs_reservations', ur);
+        notify('Reserva cancelada. Items devueltos al inventario.');
       };
 
-      const getLowStockItems = (propId) => {
-        const inv = inventories[propId] || [];
-        return inv.filter(i => i.quantity <= i.minStock);
+      // Stats y Reportes
+      const thisMonth = reservations.filter(r => new Date(r.date).getMonth() === new Date().getMonth());
+      const monthCost = thisMonth.reduce((s, r) => s + r.totalCost, 0);
+      const getLowStock = (id) => (inventories[id] || []).filter(i => i.quantity <= i.minStock);
+      const getPropStats = (id) => {
+        const inv = inventories[id] || [], res = reservations.filter(r => r.propertyId === id);
+        const tm = res.filter(r => new Date(r.date).getMonth() === new Date().getMonth());
+        const propKits = kits[id] || [];
+        return { value: inv.reduce((s, i) => s + i.quantity * i.unitCost, 0), total: res.length, month: tm.length, monthCost: tm.reduce((s, r) => s + r.totalCost, 0), kitsCount: propKits.length };
       };
 
-      const getPropertyStats = (propId) => {
-        const inv = inventories[propId] || [];
-        const propRes = reservations.filter(r => r.propertyId === propId);
-        const thisMonth = propRes.filter(r => new Date(r.date).getMonth() === new Date().getMonth());
-        return {
-          inventoryValue: inv.reduce((sum, i) => sum + (i.quantity * i.unitCost), 0),
-          totalReservations: propRes.length,
-          monthReservations: thisMonth.length,
-          monthCost: thisMonth.reduce((sum, r) => sum + r.totalCost, 0)
-        };
+      // Reporte de consumo por mes
+      const getMonthlyConsumption = (monthStr) => {
+        const [year, month] = monthStr.split('-').map(Number);
+        const monthReservations = reservations.filter(r => {
+          const d = new Date(r.date);
+          return d.getFullYear() === year && d.getMonth() === month - 1;
+        });
+
+        // Agrupar consumo por propiedad y producto
+        const consumption = {};
+        properties.forEach(prop => {
+          consumption[prop.id] = { name: prop.name, items: {}, totalCost: 0, reservations: 0 };
+        });
+
+        monthReservations.forEach(res => {
+          if (consumption[res.propertyId]) {
+            consumption[res.propertyId].reservations++;
+            consumption[res.propertyId].totalCost += res.totalCost;
+            res.items.forEach(item => {
+              if (!consumption[res.propertyId].items[item.name]) {
+                consumption[res.propertyId].items[item.name] = { qty: 0, cost: 0 };
+              }
+              consumption[res.propertyId].items[item.name].qty += item.qty;
+              consumption[res.propertyId].items[item.name].cost += item.qty * item.cost;
+            });
+          }
+        });
+
+        return consumption;
       };
 
-      const totalStats = {
-        monthReservations: reservations.filter(r => new Date(r.date).getMonth() === new Date().getMonth()).length,
-        monthCost: reservations.filter(r => new Date(r.date).getMonth() === new Date().getMonth()).reduce((s, r) => s + r.totalCost, 0),
-        totalValue: Object.values(inventories).flat().reduce((sum, i) => sum + (i.quantity * i.unitCost), 0)
+      // Calcular duración de productos
+      const getProductDuration = (item) => {
+        if (!item.purchaseDate || !item.initialQty) return null;
+        const purchaseDate = new Date(item.purchaseDate);
+        const now = new Date();
+        const daysPassed = Math.floor((now - purchaseDate) / (1000 * 60 * 60 * 24));
+        const consumed = item.initialQty - item.quantity;
+        
+        if (consumed <= 0) return { daysPassed, consumed: 0, avgPerDay: 0, estimatedDaysLeft: null };
+        
+        const avgPerDay = consumed / daysPassed;
+        const estimatedDaysLeft = avgPerDay > 0 ? Math.floor(item.quantity / avgPerDay) : null;
+        
+        return { daysPassed, consumed, avgPerDay, estimatedDaysLeft, purchaseDate };
       };
-
-      if (loading) {
-        return <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Cargando...</div>;
-      }
 
       const selectedProp = properties.find(p => p.id === selectedProperty);
+      const propKits = kits[selectedProperty] || [];
+      const kitCost = Object.entries(kitEdits).reduce((sum, [itemId, qty]) => {
+        const item = currentInv.find(i => i.id === itemId);
+        return sum + (item ? item.unitCost * qty : 0);
+      }, 0);
+
+      // Show setup wizard if not done
+      if (!setupDone) {
+        return (
+          <SetupWizard
+            onComplete={() => setSetupDone(true)}
+            onAddProperty={addProperty}
+            onAddItem={addItem}
+            onSaveKit={saveKit}
+            inventory={inventories}
+            properties={properties}
+            selectedProperty={selectedProperty}
+          />
+        );
+      }
 
       return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-gray-50 pb-24">
           {notification && (
-            <div className={`fixed top-4 right-4 px-4 py-3 rounded-lg z-50 shadow-lg ${notification.type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
+            <div className={`fixed top-4 left-4 right-4 z-50 p-4 rounded-xl shadow-lg animate-slideUp ${notification.type === 'error' ? 'bg-red-500' : 'airbnb-gradient'} text-white font-medium`}>
               {notification.msg}
             </div>
           )}
 
           {showCelebration && (
             <div className="fixed inset-0 pointer-events-none z-[100]">
-              {confettiPieces.map(piece => (
-                <div
-                  key={piece.id}
-                  style={{
-                    position: 'absolute',
-                    left: `${piece.x}%`,
-                    top: '-20px',
-                    width: piece.size,
-                    height: piece.size,
-                    backgroundColor: piece.color,
-                    borderRadius: Math.random() > 0.5 ? '50%' : '0%',
-                    transform: `rotate(${piece.rotation}deg)`,
-                    animation: `fall 2.5s ease-out ${piece.delay}s forwards`
-                  }}
-                />
+              {confetti.map(p => (
+                <div key={p.id} style={{ position: 'absolute', left: `${p.x}%`, top: '-20px', width: p.size, height: p.size, backgroundColor: p.color, borderRadius: Math.random() > 0.5 ? '50%' : '2px', animation: `confetti 3s ease-out ${p.delay}s forwards` }} />
               ))}
-              <style>{`
-                @keyframes fall {
-                  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-                  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-                }
-              `}</style>
             </div>
           )}
 
-          {showCompleteModal && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-              <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Icon name="check" /> Completar Reserva
-                </h2>
-                
-                <div className="mb-4">
-                  <label className="text-sm text-gray-400 block mb-2">Fecha de la reserva</label>
-                  <input
-                    type="date"
-                    value={reservationDate}
-                    onChange={e => setReservationDate(e.target.value)}
-                    className="w-full bg-gray-700 rounded-lg px-4 py-3 text-white"
-                  />
+          {/* Modal confirmar eliminar kit */}
+          {kitToDelete && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-slideUp">
+                <h3 className="text-lg font-bold mb-2">¿Eliminar kit?</h3>
+                <p className="text-gray-500 mb-4">Se eliminará "{kitToDelete.name}" permanentemente.</p>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setKitToDelete(null)} 
+                    className="flex-1 border-2 border-gray-200 py-3 rounded-xl font-medium"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={() => deleteKit(kitToDelete.id)} 
+                    className="flex-1 bg-red-500 text-white py-3 rounded-xl font-medium"
+                  >
+                    Eliminar
+                  </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {showModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+              <div className="bg-white rounded-t-3xl sm:rounded-2xl p-6 w-full max-w-md animate-slideUp max-h-[90vh] overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Completar Reserva</h2>
                 
                 <div className="mb-4">
-                  <label className="text-sm text-gray-400 block mb-2">Selecciona la propiedad</label>
+                  <label className="text-sm text-gray-500 block mb-2">Fecha de check-in</label>
+                  <input type="date" value={resDate} onChange={e => setResDate(e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-[#FF385C] focus:outline-none" />
+                </div>
+
+                <div className="mb-4">
+                  <label className="text-sm text-gray-500 block mb-2">Selecciona propiedad</label>
                   <div className="space-y-2">
                     {properties.map(prop => {
-                      const kit = kits[prop.id];
-                      const hasKit = kit && kit.items.length > 0;
-                      const kitCost = hasKit ? kit.items.reduce((sum, ki) => {
-                        const item = (inventories[prop.id] || []).find(i => i.id === ki.itemId);
-                        return sum + (item ? item.unitCost * ki.qty : 0);
-                      }, 0) : 0;
-                      const isSelected = selectedReservationProperty === prop.id;
+                      const propKitsList = kits[prop.id] || [];
+                      const hasKits = propKitsList.length > 0;
+                      const selected = resProp === prop.id;
                       
                       return (
-                        <button
-                          key={prop.id}
-                          onClick={() => hasKit && setSelectedReservationProperty(prop.id)}
-                          disabled={!hasKit}
-                          className={`w-full p-4 rounded-lg text-left transition border-2 ${
-                            isSelected 
-                              ? 'bg-green-700 border-green-400' 
-                              : hasKit 
-                                ? 'bg-gray-700 border-transparent hover:border-green-600' 
-                                : 'bg-gray-700 opacity-50 cursor-not-allowed border-transparent'
-                          }`}
-                        >
+                        <button key={prop.id} onClick={() => { if (hasKits) { setResProp(prop.id); setResKit(''); } }} disabled={!hasKits}
+                          className={`w-full p-4 rounded-xl text-left transition border-2 ${selected ? 'border-[#FF385C] bg-[#FFF8F6]' : hasKits ? 'border-gray-200 hover:border-[#FF385C]' : 'border-gray-100 opacity-50 cursor-not-allowed'}`}>
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-semibold text-lg">{prop.name}</p>
-                              {hasKit ? (
-                                <p className="text-sm text-gray-300">Kit: {kit.name} • Costo: ${kitCost.toLocaleString()}</p>
-                              ) : (
-                                <p className="text-sm text-gray-400">Sin kit configurado</p>
-                              )}
+                              <p className="font-semibold">{prop.name}</p>
+                              {hasKits ? <p className="text-sm text-gray-500">{propKitsList.length} kit(s) disponible(s)</p> : <p className="text-sm text-red-400">Sin kits</p>}
                             </div>
-                            {isSelected && (
-                              <div className="bg-green-500 rounded-full p-1">
-                                <Icon name="check" size={20} />
-                              </div>
-                            )}
+                            {selected && <div className="w-6 h-6 airbnb-gradient rounded-full flex items-center justify-center text-white">{Icons.check(14)}</div>}
                           </div>
                         </button>
                       );
                     })}
                   </div>
                 </div>
-                
-                <button
-                  onClick={() => selectedReservationProperty && completeReservation(selectedReservationProperty)}
-                  disabled={!selectedReservationProperty}
-                  className={`w-full py-4 rounded-xl font-bold text-lg mb-3 flex items-center justify-center gap-3 transition-all ${
-                    selectedReservationProperty 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-400 hover:from-green-400 hover:to-emerald-300' 
-                      : 'bg-gray-600 cursor-not-allowed opacity-50'
-                  }`}
-                >
-                  <span className="text-2xl">🎉</span>
-                  PROCESAR RESERVA
-                  <span className="text-2xl">🎉</span>
+
+                {resProp && (
+                  <div className="mb-4">
+                    <label className="text-sm text-gray-500 block mb-2">Selecciona kit</label>
+                    <div className="space-y-2">
+                      {(kits[resProp] || []).map(kit => {
+                        const cost = kit.items.reduce((s, ki) => { const it = (inventories[resProp] || []).find(i => i.id === ki.itemId); return s + (it ? it.unitCost * ki.qty : 0); }, 0);
+                        const selected = resKit === kit.id;
+                        
+                        return (
+                          <button key={kit.id} onClick={() => setResKit(kit.id)}
+                            className={`w-full p-3 rounded-xl text-left transition border-2 ${selected ? 'border-[#FF385C] bg-[#FFF8F6]' : 'border-gray-200 hover:border-[#FF385C]'}`}>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{kit.name}</p>
+                                <p className="text-sm text-gray-500">${cost.toLocaleString()}</p>
+                              </div>
+                              {selected && <div className="w-5 h-5 airbnb-gradient rounded-full flex items-center justify-center text-white">{Icons.check(12)}</div>}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <button onClick={completeReservation} disabled={!resProp || !resKit}
+                  className={`w-full py-4 rounded-xl font-bold text-lg mb-3 btn-airbnb flex items-center justify-center gap-2 ${resProp && resKit ? 'airbnb-gradient text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
+                  🎉 Procesar Reserva 🎉
                 </button>
-                
-                <button
-                  onClick={() => {
-                    setShowCompleteModal(false);
-                    setSelectedReservationProperty('');
-                  }}
-                  className="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-lg"
-                >
+                <button onClick={() => { setShowModal(false); setResProp(''); setResKit(''); }} className="w-full py-3 rounded-xl font-medium text-gray-500 hover:bg-gray-100">
                   Cancelar
                 </button>
               </div>
             </div>
           )}
-          
-          <nav className="bg-gray-800 border-b border-gray-700 px-4 py-3">
-            <div className="flex gap-2 overflow-x-auto">
-              {[
-                { id: 'dashboard', icon: 'home', label: 'Inicio' },
-                { id: 'inventory', icon: 'package', label: 'Inventario' },
-                { id: 'kits', icon: 'cart', label: 'Kits' },
-                { id: 'reservations', icon: 'list', label: 'Historial' },
-                { id: 'properties', icon: 'settings', label: 'Propiedades' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition ${activeTab === tab.id ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
-                >
-                  <Icon name={tab.icon} size={18} />
-                  <span className="text-sm">{tab.label}</span>
-                </button>
-              ))}
+
+          <header className="bg-white border-b border-gray-100 px-4 py-4 sticky top-0 z-40">
+            <div className="max-w-lg mx-auto flex items-center justify-between">
+              <Logo />
             </div>
-          </nav>
+          </header>
 
-          <main className="p-4 max-w-4xl mx-auto">
-            {activeTab === 'dashboard' && (
-              <div className="space-y-4">
-                <h1 className="text-2xl font-bold">Dashboard</h1>
-
-                <button
-                  onClick={() => {
-                    setReservationDate(new Date().toISOString().split('T')[0]);
-                    setShowCompleteModal(true);
-                  }}
-                  disabled={properties.length === 0}
-                  className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 disabled:opacity-50 py-6 rounded-xl text-xl font-bold flex items-center justify-center gap-3 shadow-lg"
-                >
-                  <Icon name="check" size={32} />
-                  RESERVA COMPLETADA
+          <main className="max-w-lg mx-auto p-4">
+            {view === 'dashboard' && (
+              <div className="space-y-4 animate-slideUp">
+                <button onClick={() => setShowModal(true)} className="w-full airbnb-gradient text-white p-6 rounded-2xl card-shadow btn-airbnb">
+                  <div className="flex items-center justify-between">
+                    <div className="text-left">
+                      <p className="text-white/80 text-sm">Nueva reserva completada</p>
+                      <p className="text-2xl font-bold mt-1">Registrar check-in</p>
+                    </div>
+                    <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">{Icons.check(28)}</div>
+                  </div>
                 </button>
-                
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <p className="text-gray-400 text-xs">Propiedades</p>
-                    <p className="text-2xl font-bold">{properties.length}</p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white rounded-xl card-shadow p-4">
+                    <p className="text-gray-400 text-xs uppercase">Este mes</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">{thisMonth.length}</p>
+                    <p className="text-[#00A699] text-sm font-medium">reservas</p>
                   </div>
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <p className="text-gray-400 text-xs">Reservas Mes</p>
-                    <p className="text-2xl font-bold">{totalStats.monthReservations}</p>
-                  </div>
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <p className="text-gray-400 text-xs">Gasto Mes</p>
-                    <p className="text-xl font-bold text-green-400">${totalStats.monthCost.toLocaleString()}</p>
+                  <div className="bg-white rounded-xl card-shadow p-4">
+                    <p className="text-gray-400 text-xs uppercase">Gastado</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">${monthCost.toLocaleString()}</p>
+                    <p className="text-[#FF385C] text-sm font-medium">en insumos</p>
                   </div>
                 </div>
 
-                {properties.length === 0 ? (
-                  <div className="bg-gray-800 rounded-lg p-6 text-center">
-                    <p className="text-gray-400 mb-4">Comienza agregando tus propiedades</p>
-                    <button onClick={() => setActiveTab('properties')} className="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg">
-                      Agregar Propiedad
-                    </button>
-                  </div>
-                ) : (
+                <div className="bg-white rounded-xl card-shadow p-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">Tus propiedades</h3>
                   <div className="space-y-3">
                     {properties.map(prop => {
-                      const stats = getPropertyStats(prop.id);
-                      const lowStock = getLowStockItems(prop.id);
-                      const kit = kits[prop.id];
+                      const stats = getPropStats(prop.id);
+                      const low = getLowStock(prop.id);
+                      const kit = kits[prop.id] || [];
                       
                       return (
-                        <div key={prop.id} className="bg-gray-800 rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-3">
+                        <div key={prop.id} className="border border-gray-100 rounded-xl p-4 hover:border-[#FF385C]/30 transition">
+                          <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-bold text-lg">{prop.name}</h3>
-                              <p className="text-sm text-gray-400">
-                                {stats.monthReservations} reservas este mes • ${stats.monthCost.toLocaleString()}
-                              </p>
+                              <p className="font-semibold text-gray-900">{prop.name}</p>
+                              <p className="text-sm text-gray-500">{stats.month} reservas • ${stats.monthCost.toLocaleString()}</p>
                             </div>
-                            <div className="text-right">
-                              <p className="text-xs text-gray-400">Inventario</p>
-                              <p className="font-semibold">${stats.inventoryValue.toLocaleString()}</p>
-                            </div>
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">${stats.value.toLocaleString()}</span>
                           </div>
-                          
-                          {!kit || kit.items.length === 0 ? (
-                            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 text-sm">
-                              <p className="text-yellow-500">⚠️ Sin kit configurado</p>
-                            </div>
-                          ) : lowStock.length > 0 ? (
-                            <div className="bg-red-900/30 border border-red-700 rounded-lg p-3">
-                              <p className="text-red-400 text-sm flex items-center gap-1">
-                                <Icon name="alert" size={14} /> Stock bajo: {lowStock.map(i => i.name).join(', ')}
-                              </p>
-                            </div>
+                          {!kit?.length ? (
+                            <div className="mt-2 bg-amber-50 text-amber-700 text-xs px-3 py-2 rounded-lg">⚠️ Sin kits configurados</div>
+                          ) : low.length > 0 ? (
+                            <div className="mt-2 bg-red-50 text-red-600 text-xs px-3 py-2 rounded-lg flex items-center gap-1">{Icons.alert(14)} Stock bajo: {low.map(i => i.name).join(', ')}</div>
                           ) : (
-                            <div className="bg-green-900/30 border border-green-700 rounded-lg p-3">
-                              <p className="text-green-400 text-sm">✓ Inventario OK</p>
-                            </div>
+                            <div className="mt-2 bg-emerald-50 text-emerald-600 text-xs px-3 py-2 rounded-lg">✓ {kit.length} kit(s) • Inventario OK</div>
                           )}
                         </div>
                       );
                     })}
                   </div>
-                )}
+                </div>
               </div>
             )}
 
-            {activeTab === 'inventory' && (
-              <div className="space-y-4">
-                <h1 className="text-2xl font-bold">Inventario</h1>
+            {view === 'inventory' && (
+              <div className="space-y-4 animate-slideUp">
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {properties.map(p => (
+                    <button key={p.id} onClick={() => setSelectedProperty(p.id)} className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${selectedProperty === p.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
 
-                {properties.length === 0 ? (
-                  <div className="bg-gray-800 rounded-lg p-6 text-center">
-                    <p className="text-gray-400">Primero agrega una propiedad</p>
+                <div className="bg-white rounded-xl card-shadow p-4">
+                  <h3 className="font-semibold mb-3">Agregar producto</h3>
+                  <div className="space-y-2">
+                    <input type="text" placeholder="Nombre del producto" value={newItemName} onChange={e => setNewItemName(e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:border-[#FF385C] focus:outline-none" />
+                    <div className="grid grid-cols-3 gap-2">
+                      <input type="number" placeholder="Cant." value={newItemQty} onChange={e => setNewItemQty(e.target.value)} className="border border-gray-200 rounded-xl px-3 py-2 focus:border-[#FF385C] focus:outline-none" />
+                      <input type="number" placeholder="Costo $" value={newItemCost} onChange={e => setNewItemCost(e.target.value)} className="border border-gray-200 rounded-xl px-3 py-2 focus:border-[#FF385C] focus:outline-none" />
+                      <input type="number" placeholder="Mín." value={newItemMin} onChange={e => setNewItemMin(e.target.value)} className="border border-gray-200 rounded-xl px-3 py-2 focus:border-[#FF385C] focus:outline-none" />
+                    </div>
+                    <button onClick={addItemFromForm} className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium btn-airbnb flex items-center justify-center gap-2">{Icons.plus(18)} Agregar</button>
                   </div>
-                ) : (
-                  <>
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {properties.map(prop => (
-                        <button
-                          key={prop.id}
-                          onClick={() => setSelectedProperty(prop.id)}
-                          className={`px-4 py-2 rounded-lg whitespace-nowrap transition ${selectedProperty === prop.id ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
-                        >
-                          {prop.name}
-                        </button>
-                      ))}
-                    </div>
+                </div>
 
-                    <div className="bg-gray-800 p-4 rounded-lg space-y-3">
-                      <h3 className="font-semibold">Agregar a {selectedProp?.name}</h3>
-                      <input
-                        type="text"
-                        placeholder="Nombre (ej: Esponjas)"
-                        value={newItem.name}
-                        onChange={e => setNewItem({ ...newItem, name: e.target.value })}
-                        className="w-full bg-gray-700 rounded px-3 py-2 text-white"
-                      />
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <label className="text-xs text-gray-400">Cantidad</label>
-                          <input
-                            type="number"
-                            value={newItem.quantity || ''}
-                            onChange={e => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 0 })}
-                            className="w-full bg-gray-700 rounded px-3 py-2 text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400">Costo Unit.</label>
-                          <input
-                            type="number"
-                            value={newItem.unitCost || ''}
-                            onChange={e => setNewItem({ ...newItem, unitCost: parseInt(e.target.value) || 0 })}
-                            className="w-full bg-gray-700 rounded px-3 py-2 text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400">Stock Mín.</label>
-                          <input
-                            type="number"
-                            value={newItem.minStock || ''}
-                            onChange={e => setNewItem({ ...newItem, minStock: parseInt(e.target.value) || 0 })}
-                            className="w-full bg-gray-700 rounded px-3 py-2 text-white"
-                          />
-                        </div>
-                      </div>
-                      <button onClick={addInventoryItem} className="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg flex items-center justify-center gap-2">
-                        <Icon name="plus" size={18} /> Agregar
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {currentInventory.map(item => (
-                        <div key={item.id} className={`bg-gray-800 p-3 rounded-lg flex items-center justify-between ${item.quantity <= item.minStock ? 'border border-yellow-600' : ''}`}>
+                <div className="space-y-2">
+                  {currentInv.map(item => {
+                    const duration = getProductDuration(item);
+                    return (
+                      <div key={item.id} className={`bg-white rounded-xl card-shadow p-4 ${item.quantity <= item.minStock ? 'border-2 border-amber-400' : ''}`}>
+                        <div className="flex justify-between items-center">
                           <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-gray-400">${item.unitCost.toLocaleString()} c/u • Mín: {item.minStock}</p>
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="text-sm text-gray-500">${item.unitCost.toLocaleString()} c/u</p>
+                            {duration?.purchaseDate && (
+                              <p className="text-xs text-gray-400">Comprado: {new Date(duration.purchaseDate).toLocaleDateString('es-CL')}</p>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <button onClick={() => updateInventoryQty(item.id, -1)} className="bg-gray-700 p-2 rounded hover:bg-gray-600">
-                              <Icon name="minus" size={16} />
+                            <button onClick={() => updateQty(item.id, -1)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">{Icons.minus(16)}</button>
+                            <span className="w-10 text-center font-bold">{item.quantity}</span>
+                            <button onClick={() => updateQty(item.id, 1)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">{Icons.plus(16)}</button>
+                            <button 
+                              onClick={() => {
+                                const qty = prompt('¿Cuántas unidades compraste?');
+                                if (qty && parseInt(qty) > 0) restockItem(item.id, parseInt(qty));
+                              }}
+                              className="w-9 h-9 rounded-full bg-[#00A699] text-white flex items-center justify-center hover:bg-[#008F80]"
+                              title="Reabastecer"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                             </button>
-                            <span className="w-12 text-center font-bold">{item.quantity}</span>
-                            <button onClick={() => updateInventoryQty(item.id, 1)} className="bg-gray-700 p-2 rounded hover:bg-gray-600">
-                              <Icon name="plus" size={16} />
-                            </button>
-                            <button onClick={() => deleteInventoryItem(item.id)} className="bg-red-700 p-2 rounded hover:bg-red-600 ml-2">
-                              <Icon name="trash" size={16} />
-                            </button>
+                            <button onClick={() => deleteItem(item.id)} className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100">{Icons.trash(16)}</button>
                           </div>
-                        </div>
-                      ))}
-                      {currentInventory.length === 0 && (
-                        <p className="text-gray-400 text-center py-8">No hay productos en {selectedProp?.name}</p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'kits' && (
-              <div className="space-y-4">
-                <h1 className="text-2xl font-bold">Kit por Propiedad</h1>
-                
-                {properties.length === 0 ? (
-                  <div className="bg-gray-800 rounded-lg p-6 text-center">
-                    <p className="text-gray-400">Primero agrega una propiedad</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {properties.map(prop => (
-                        <button
-                          key={prop.id}
-                          onClick={() => setSelectedProperty(prop.id)}
-                          className={`px-4 py-2 rounded-lg whitespace-nowrap transition ${selectedProperty === prop.id ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
-                        >
-                          {prop.name}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="bg-gray-800 p-4 rounded-lg space-y-3">
-                      <h3 className="font-semibold">Kit para {selectedProp?.name}</h3>
-                      <input
-                        type="text"
-                        placeholder="Nombre del kit (ej: Kit Estándar)"
-                        value={newKit.name}
-                        onChange={e => setNewKit({ ...newKit, name: e.target.value })}
-                        className="w-full bg-gray-700 rounded px-3 py-2 text-white"
-                      />
-                      
-                      {currentInventory.length > 0 ? (
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-400">¿Cuánto se usa por reserva?</p>
-                          {currentInventory.map(item => {
-                            const kitItem = newKit.items.find(i => i.itemId === item.id);
-                            return (
-                              <div key={item.id} className="flex items-center justify-between bg-gray-700 p-3 rounded">
-                                <div>
-                                  <span className="font-medium">{item.name}</span>
-                                  <span className="text-gray-400 text-sm ml-2">(hay {item.quantity})</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <button onClick={() => updateKitItem(item.id, (kitItem?.qty || 0) - 1)} className="bg-gray-600 p-2 rounded hover:bg-gray-500">
-                                    <Icon name="minus" size={14} />
-                                  </button>
-                                  <span className="w-10 text-center font-bold">{kitItem?.qty || 0}</span>
-                                  <button onClick={() => updateKitItem(item.id, (kitItem?.qty || 0) + 1)} className="bg-gray-600 p-2 rounded hover:bg-gray-500">
-                                    <Icon name="plus" size={14} />
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-gray-400 text-sm">Primero agrega productos al inventario de esta propiedad</p>
-                      )}
-
-                      {newKit.items.length > 0 && (
-                        <div className="bg-gray-700 p-3 rounded-lg">
-                          <p className="text-sm text-gray-400">Costo por reserva:</p>
-                          <p className="text-xl font-bold text-green-400">
-                            ${newKit.items.reduce((sum, ki) => {
-                              const item = currentInventory.find(i => i.id === ki.itemId);
-                              return sum + (item ? item.unitCost * ki.qty : 0);
-                            }, 0).toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-                      
-                      <button onClick={saveKit} className="w-full bg-green-600 hover:bg-green-500 py-3 rounded-lg font-semibold">
-                        Guardar Kit
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'reservations' && (
-              <div className="space-y-4">
-                <h1 className="text-2xl font-bold">Historial de Reservas</h1>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <p className="text-gray-400 text-sm">Este Mes</p>
-                    <p className="text-2xl font-bold">{totalStats.monthReservations}</p>
-                    <p className="text-green-400">${totalStats.monthCost.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <p className="text-gray-400 text-sm">Total</p>
-                    <p className="text-2xl font-bold">{reservations.length}</p>
-                    <p className="text-green-400">${reservations.reduce((s, r) => s + r.totalCost, 0).toLocaleString()}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {reservations.map(res => (
-                    <div key={res.id} className="bg-gray-800 p-4 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{res.propertyName}</p>
-                          <p className="text-sm text-gray-400">{res.kitName}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-green-400">${res.totalCost.toLocaleString()}</p>
-                          <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
-                            <Icon name="calendar" size={12} />
-                            {new Date(res.date).toLocaleDateString('es-CL')}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-xs text-gray-400">
-                        {res.items.map((i, idx) => (
-                          <span key={idx} className="mr-2">• {i.name}: {i.qty}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  {reservations.length === 0 && (
-                    <p className="text-gray-400 text-center py-8">No hay reservas registradas</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'properties' && (
-              <div className="space-y-4">
-                <h1 className="text-2xl font-bold">Propiedades</h1>
-                
-                <div className="bg-gray-800 p-4 rounded-lg flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Nombre de la propiedad"
-                    value={newProperty}
-                    onChange={e => setNewProperty(e.target.value)}
-                    className="flex-1 bg-gray-700 rounded px-3 py-2 text-white"
-                  />
-                  <button onClick={addProperty} className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg">
-                    <Icon name="plus" size={20} />
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  {properties.map(prop => {
-                    const stats = getPropertyStats(prop.id);
-                    const inv = inventories[prop.id] || [];
-                    const kit = kits[prop.id];
-                    
-                    return (
-                      <div key={prop.id} className="bg-gray-800 p-4 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold text-lg">{prop.name}</p>
-                            <p className="text-sm text-gray-400">
-                              {inv.length} productos • {stats.totalReservations} reservas
-                            </p>
-                            <p className="text-sm text-gray-400">
-                              Kit: {kit && kit.items.length > 0 ? `${kit.name} (${kit.items.length} items)` : 'No configurado'}
-                            </p>
-                          </div>
-                          <button onClick={() => deleteProperty(prop.id)} className="bg-red-700 hover:bg-red-600 p-2 rounded">
-                            <Icon name="trash" size={16} />
-                          </button>
                         </div>
                       </div>
                     );
                   })}
-                  {properties.length === 0 && (
-                    <p className="text-gray-400 text-center py-8">No hay propiedades agregadas</p>
+                </div>
+              </div>
+            )}
+
+            {view === 'kits' && (
+              <div className="space-y-4 animate-slideUp">
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {properties.map(p => (
+                    <button key={p.id} onClick={() => { setSelectedProperty(p.id); cancelEditKit(); }} className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${selectedProperty === p.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Lista de kits existentes */}
+                {propKits.length > 0 && !editingKitId && (
+                  <div className="bg-white rounded-xl card-shadow p-4">
+                    <h3 className="font-semibold mb-3">Kits de {selectedProp?.name}</h3>
+                    <div className="space-y-2">
+                      {propKits.map(kit => {
+                        const cost = kit.items.reduce((s, ki) => { const it = currentInv.find(i => i.id === ki.itemId); return s + (it ? it.unitCost * ki.qty : 0); }, 0);
+                        return (
+                          <div key={kit.id} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
+                            <div>
+                              <p className="font-medium">{kit.name}</p>
+                              <p className="text-sm text-gray-500">{kit.items.length} items • ${cost.toLocaleString()}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={() => startEditKit(kit)} className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:border-[#FF385C] text-gray-600">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                              </button>
+                              <button 
+                              onClick={() => setKitToDelete(kit)} 
+                              className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100"
+                            >
+                              {Icons.trash(16)}
+                            </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulario crear/editar kit */}
+                <div className="bg-white rounded-xl card-shadow p-4">
+                  <h3 className="font-semibold mb-1">{editingKitId ? 'Editar Kit' : 'Crear Nuevo Kit'}</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    {editingKitId ? 'Modifica las cantidades del kit' : 'Define un kit para ' + selectedProp?.name}
+                  </p>
+
+                  <input 
+                    type="text" 
+                    placeholder="Nombre del kit (ej: Kit 2 personas, Kit 4 personas)" 
+                    value={currentKitName}
+                    onChange={(e) => setCurrentKitName(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:border-[#FF385C] focus:outline-none mb-4" 
+                  />
+
+                  <div className="space-y-2">
+                    {currentInv.map(item => (
+                      <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-xs text-gray-400">Stock: {item.quantity}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => updateKitQty(item.id, -1)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center">{Icons.minus(14)}</button>
+                          <span className="w-8 text-center font-bold">{kitEdits[item.id] || 0}</span>
+                          <button onClick={() => updateKitQty(item.id, 1)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center">{Icons.plus(14)}</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {currentInv.length === 0 && (
+                    <p className="text-center text-gray-400 py-4">Primero agrega productos al inventario</p>
                   )}
+
+                  {Object.keys(kitEdits).length > 0 && (
+                    <div className="bg-[#FFF8F6] rounded-xl p-4 mt-4">
+                      <p className="text-sm text-gray-600">Costo por reserva:</p>
+                      <p className="text-2xl font-bold text-[#FF385C]">${kitCost.toLocaleString()}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 mt-4">
+                    {editingKitId && (
+                      <button onClick={cancelEditKit} className="flex-1 border-2 border-gray-200 py-3 rounded-xl font-medium btn-airbnb">
+                        Cancelar
+                      </button>
+                    )}
+                    <button onClick={() => saveKit()} className={`${editingKitId ? 'flex-1' : 'w-full'} airbnb-gradient text-white py-4 rounded-xl font-semibold btn-airbnb`}>
+                      {editingKitId ? 'Guardar Cambios' : 'Crear Kit'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {view === 'history' && (
+              <div className="space-y-4 animate-slideUp">
+                {/* Selector de mes */}
+                <div className="bg-white rounded-xl card-shadow p-4">
+                  <label className="text-sm text-gray-500 block mb-2">Seleccionar mes</label>
+                  <input 
+                    type="month" 
+                    value={reportMonth} 
+                    onChange={e => setReportMonth(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:border-[#FF385C] focus:outline-none"
+                  />
+                </div>
+
+                {/* Resumen del mes */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white rounded-xl card-shadow p-4">
+                    <p className="text-gray-400 text-xs">Reservas del mes</p>
+                    <p className="text-2xl font-bold">{Object.values(getMonthlyConsumption(reportMonth)).reduce((s, p) => s + p.reservations, 0)}</p>
+                  </div>
+                  <div className="bg-white rounded-xl card-shadow p-4">
+                    <p className="text-gray-400 text-xs">Gasto total</p>
+                    <p className="text-2xl font-bold text-[#FF385C]">${Object.values(getMonthlyConsumption(reportMonth)).reduce((s, p) => s + p.totalCost, 0).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Consumo por propiedad */}
+                <div className="bg-white rounded-xl card-shadow p-4">
+                  <h3 className="font-semibold mb-3">📊 Consumo por propiedad</h3>
+                  {Object.entries(getMonthlyConsumption(reportMonth)).map(([propId, data]) => (
+                    <div key={propId} className="mb-4 last:mb-0">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="font-medium">{data.name}</p>
+                        <span className="text-sm text-gray-500">{data.reservations} reservas • ${data.totalCost.toLocaleString()}</span>
+                      </div>
+                      {Object.keys(data.items).length > 0 ? (
+                        <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+                          {Object.entries(data.items).map(([itemName, itemData]) => (
+                            <div key={itemName} className="flex justify-between text-sm">
+                              <span className="text-gray-600">{itemName}</span>
+                              <span className="font-medium">{itemData.qty} uds • ${itemData.cost.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-400">Sin consumo este mes</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Duración de productos */}
+                <div className="bg-white rounded-xl card-shadow p-4">
+                  <h3 className="font-semibold mb-3">⏱️ Duración de productos</h3>
+                  <p className="text-sm text-gray-500 mb-3">Productos con consumo variable (no por kit)</p>
+                  
+                  <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
+                    {properties.map(p => (
+                      <button key={p.id} onClick={() => setSelectedProperty(p.id)} className={`px-3 py-1 rounded-full whitespace-nowrap text-sm font-medium transition ${selectedProperty === p.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                        {p.name}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    {currentInv.map(item => {
+                      const duration = getProductDuration(item);
+                      return (
+                        <div key={item.id} className="bg-gray-50 rounded-lg p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium">{item.name}</p>
+                              <p className="text-xs text-gray-500">Stock actual: {item.quantity}</p>
+                            </div>
+                            {duration && duration.consumed > 0 ? (
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-[#FF385C]">{duration.consumed} usados</p>
+                                <p className="text-xs text-gray-500">en {duration.daysPassed} días</p>
+                                {duration.estimatedDaysLeft && (
+                                  <p className="text-xs text-[#00A699]">~{duration.estimatedDaysLeft} días restantes</p>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">Sin datos</span>
+                            )}
+                          </div>
+                          {duration?.purchaseDate && (
+                            <p className="text-xs text-gray-400 mt-1">Comprado: {new Date(duration.purchaseDate).toLocaleDateString('es-CL')}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {currentInv.length === 0 && <p className="text-gray-400 text-center py-4">Sin productos</p>}
+                  </div>
+                </div>
+
+                {/* Historial de reservas */}
+                <div className="bg-white rounded-xl card-shadow p-4">
+                  <h3 className="font-semibold mb-3">📋 Historial de reservas</h3>
+                  <div className="space-y-2">
+                    {reservations.filter(r => r.date.startsWith(reportMonth)).map(res => (
+                      <div key={res.id} className="bg-gray-50 rounded-lg p-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-medium">{res.propertyName}</p>
+                            <p className="text-xs text-gray-500">{res.kitName} • {res.items.map(i => `${i.name} x${i.qty}`).join(', ')}</p>
+                          </div>
+                          <div className="text-right mr-2">
+                            <p className="font-bold text-[#FF385C]">${res.totalCost.toLocaleString()}</p>
+                            <p className="text-xs text-gray-400">{new Date(res.date).toLocaleDateString('es-CL')}</p>
+                          </div>
+                          <button 
+                            onClick={() => { 
+                              if (confirm('¿Cancelar esta reserva? Los items serán devueltos al inventario.')) {
+                                deleteReservation(res.id);
+                              }
+                            }} 
+                            className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 flex-shrink-0"
+                          >
+                            {Icons.trash(14)}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {reservations.filter(r => r.date.startsWith(reportMonth)).length === 0 && (
+                      <p className="text-center text-gray-400 py-4">Sin reservas este mes</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {view === 'properties' && (
+              <div className="space-y-4 animate-slideUp">
+                <div className="bg-white rounded-xl card-shadow p-4">
+                  <h3 className="font-semibold mb-3">Agregar propiedad</h3>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Nombre de la propiedad" 
+                      id="newPropInput"
+                      className="flex-1 border border-gray-200 rounded-xl px-4 py-3 focus:border-[#FF385C] focus:outline-none" 
+                    />
+                    <button 
+                      onClick={() => { 
+                        const input = document.getElementById('newPropInput');
+                        if (input.value.trim()) { 
+                          addProperty(input.value.trim()); 
+                          input.value = '';
+                        } 
+                      }} 
+                      className="airbnb-gradient text-white px-6 py-3 rounded-xl font-medium btn-airbnb flex items-center gap-2"
+                    >
+                      {Icons.plus(18)}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {properties.map(prop => {
+                    const stats = getPropStats(prop.id);
+                    const inv = inventories[prop.id] || [];
+                    const kit = kits[prop.id];
+                    
+                    return (
+                      <div key={prop.id} className="bg-white rounded-xl card-shadow p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-lg text-gray-900">{prop.name}</p>
+                            <p className="text-sm text-gray-500">{inv.length} productos • {stats.total} reservas</p>
+                            <p className="text-sm text-gray-500">
+                              Kits: {kit?.length > 0 ? `${kit.length} configurado(s)` : 'No configurado'}
+                            </p>
+                          </div>
+                          <button 
+                            onClick={() => { 
+                              if (confirm(`¿Eliminar "${prop.name}"? Esta acción no se puede deshacer.`)) {
+                                deleteProperty(prop.id);
+                              }
+                            }} 
+                            className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100"
+                          >
+                            {Icons.trash(18)}
+                          </button>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-sm">
+                          <span className="text-gray-500">Valor inventario</span>
+                          <span className="font-semibold">${stats.value.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {properties.length === 0 && <p className="text-center text-gray-400 py-8">No hay propiedades agregadas</p>}
                 </div>
               </div>
             )}
           </main>
+
+          <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 z-40">
+            <div className="max-w-lg mx-auto flex justify-around">
+              {[
+                { id: 'dashboard', icon: Icons.home(22), label: 'Inicio' },
+                { id: 'inventory', icon: Icons.package(22), label: 'Inventario' },
+                { id: 'kits', icon: Icons.box(22), label: 'Kits' },
+                { id: 'history', icon: Icons.chart(22), label: 'Historial' },
+                { id: 'properties', icon: Icons.settings(22), label: 'Propiedades' }
+              ].map(nav => (
+                <button key={nav.id} onClick={() => setView(nav.id)} className={`flex flex-col items-center gap-1 py-2 px-4 transition ${view === nav.id ? 'text-[#FF385C]' : 'text-gray-400 hover:text-gray-600'}`}>
+                  {nav.icon}
+                  <span className="text-xs font-medium">{nav.label}</span>
+                  {view === nav.id && <div className="w-1 h-1 rounded-full bg-[#FF385C]" />}
+                </button>
+              ))}
+            </div>
+          </nav>
         </div>
       );
     }
